@@ -1,102 +1,80 @@
 # FMP Video Player
 
-A Windows desktop media player. It plays video and audio files through libVLC, with a React interface in Hebrew and English, an equalizer, picture effects, encoding details, and recording of whatever is playing.
+A Windows player for audio and video files on your computer. The interface is in Hebrew or English. In Hebrew it runs from right to left, and in English from left to right.
 
-The app is Electron. The main window is a React page, and the picture itself is drawn in a native Win32 window that sits inside the Electron frame. libVLC covers a wide range of formats, and the interface stays above the video.
+## Audio and video playback
 
-Current version: `0.2.1`. App id: `com.fmp.videoplayer`.
+The player plays audio and video files from your computer. A song shows a spinning circle: the album art when the file has it, otherwise the logo, with the file name underneath. A video shows the picture.
 
-## What the player does
+You can drag files onto the window to start playback. While you drag, the area is highlighted.
 
-- Opens one file, several files, or a folder, and plays them as a list.
-- Accepts files dropped onto the window, and files opened from the system (a file-type association, or a second launch of the same shortcut).
-- Runs as a single instance. A later launch hands its files to the window that is already open.
-- Play, pause, 10-second skip, volume, mute, and playback speed from 0.25 to 2.
-- Repeat off, repeat the list, or repeat the current file, plus shuffle.
-- Fullscreen, and a control bar that can sit above the video or below it.
-- A 10-band graphic equalizer with output gain, and ready-made presets.
-- Picture effects: hue, contrast, brightness, saturation, gamma, and profiles such as Vivid, Cinematic, and Black & white.
-- File details (title, artist, album, episode) and encoding details for each video, audio, and subtitle track.
-- Recording of playback to a file. Video is saved as H.264/AAC inside MP4.
-- A dark or light theme, and an interface in Hebrew (the default, right to left) or English.
-- A quiet update check on launch, and an update button in Settings. Installing an update downloads the NSIS setup and runs it.
+## Opening files
 
-Keyboard shortcuts in the player: Space for play or pause, Left and Right to skip, Up and Down for volume.
+You can open one file, several files, or a folder. Opening a folder brings the audio and video files inside it, in name order. They play in sequence, and you can move between them.
 
-## How the picture is drawn
+The chooser opens in the folder of the last file. A file that is not audio or video does not play, and if there is nothing to play a message appears.
 
-The picture is drawn in a native child window, separate from the React page. The Electron main process loads `libvlc.dll` through [koffi](https://github.com/Koromix/koffi) and creates a child window (`WS_CHILD`) on the Electron parent window. The React UI measures the video area and sends those bounds to the main process, which moves the native window to the same place.
+Files you already opened appear in a list beside the menu, with a small picture and the file location. When nothing is on screen, clicking the empty area, or pressing Enter or Space, opens the file menu.
 
-The control bar and the file menus are separate transparent Electron windows that float above the video layer. While a system file dialog is open, or when the main window loses focus, those layers are hidden so they stay inside this app.
+If the player is already open and you open a file from Windows, it arrives in the existing window.
 
-The audio and video extensions the player accepts are listed in `shared/vlc-media-extensions.ts`, following VLC's extension lists. Thumbnails and metadata are also read through libVLC (`electron/media-probe.ts`).
+## Playback controls
 
-The local libVLC build lives in the `libvlc/` folder at the repo root. In development it is loaded from there. In a packaged build it is copied to `resources/libvlc` (`list.md` is left out).
+You can pause and resume, jump to any point on the bar, skip ten seconds backward or forward, and move to the previous or next file.
 
-## Layout
+Hovering the progress bar on a video shows a preview of the frame at that point, together with the time.
 
-| Path | Role |
-| --- | --- |
-| `src/` | React UI: player, effects, media details, settings, navbar |
-| `electron/` | Main process: windows, libVLC, Win32, updates, storage |
-| `electron/preload.ts` | The `window.electronAPI` bridge between the UI and the main process |
-| `shared/` | Types and media extensions shared by both sides |
-| `libvlc/` | The libVLC binaries and plugins shipped with the app |
-| `build/` | Icon and the NSIS script |
-| `scripts/` | Dev startup, icon generation, `update.json` sync, and the installer build |
-| `.github/workflows/release.yml` | Build on every push, then publish the same release to both repositories |
+Above the controls you see what is open, and with several files also which number this one is. When a file ends and another is waiting, playback continues to it. With repeat off, the last file stops.
 
-Screens:
+Repeat can be off, on for every file, or on for the current file. You can also shuffle the order.
 
-- `/player` — the player
-- `/effects` — audio and video effects
-- `/media` — file and encoding details
-- `/settings` — language, theme, control-bar position, and updates
+Speed runs from half speed up to double speed, and the number appears on the button. Volume goes up to twice the normal level, and you can mute.
 
-## What is kept between launches
+You can go fullscreen, and place the control bar at the top or the bottom. During a video the controls disappear after a moment without movement, and come back when you move the mouse. They stay as long as the pointer is on them. Hovering a button that has a shortcut shows the key.
 
-Settings and playback memory are stored together in `settings.json` inside the app data folder (`app.getPath('userData')`), shaped as `{ settings, memory }`. An older `memory.json` is merged into that file on the first read, then removed.
+## Keyboard shortcuts
 
-What is stored: language, theme, control-bar position, volume, mute, speed, repeat mode, shuffle, the last opened folder, the last effects tab, the last media-details tab, and the effect values. The open file list lives only for the current session.
+The shortcuts work while a file is open, as long as the cursor is not in a text field.
 
-Uninstall leaves the data folder in place.
+- Space plays or pauses.
+- Left and Right skip ten seconds. With Ctrl they skip thirty.
+- Up and Down change the volume by five percent.
+- Plus goes to the next file, and minus to the previous one.
+- Esc closes an open menu.
+- When nothing is playing, Enter or Space opens files.
 
-## Development
+## Playlists
 
-You need Windows x64, Node.js 22, and a complete `libvlc` folder (the DLL and the `plugins` directory).
+You can save what is playing as a list, or create a list and add files to it. Each list can be renamed, edited, deleted, and played again.
 
-```bash
-npm install
-npm run dev
-```
+The lists live in the Tools menu, and also open beside the Open Files menu. There you can see how many files each list has.
 
-`npm run dev` removes stale Electron outputs, runs Vite in watch mode, and waits for `dist/index.html`, `dist-electron/main.js`, and `dist-electron/preload.cjs` before it opens Electron.
+## Audio effects
 
-Other commands:
+A ten-band equalizer controls the frequencies, and there is also control over the output level. You can pick a ready profile: flat, rock, pop, jazz, classical, bass boost, treble, or vocal. The change is heard right away during playback. Everything can be reset back to the original sound.
 
-| Command | What it does |
-| --- | --- |
-| `npm run build` | Typecheck, then build the UI and the main process |
-| `npm start` | Open Electron against the existing build |
-| `npm run lint` | Oxlint |
-| `npm run icons` | Generate `build/icon.ico` |
-| `npm run dist` | NSIS installer in the `release/` folder |
-| `npm run dist:dir` | An unpacked app folder, for a local check |
-| `npm run dist:publish` | The same build, with electron-builder publishing |
+## Video effects
 
-The build uses Vite 8, React 19, TypeScript, and Electron 42. electron-builder targets an NSIS installer for Windows x64, with a choice of install folder, desktop and Start menu shortcuts, and a launch when setup finishes. The installer includes Hebrew and English and follows the system language.
+You can adjust hue, contrast, brightness, saturation, and gamma. The preview is a still of the video with the new look, and the change is also visible during playback. Ready profiles: original, vivid, warm, cool, black and white, soft, cinema, and bright. The picture can be reset at any time.
 
-Registered video types include mp4, mkv, avi, mov, wmv, webm, mpeg, flv, ts, m2ts, ogv, and vob, among others. The full list is in `electron-builder.yml`.
+## Media details
 
-## Releases and updates
+For the file that is playing you can see its details: name, location, title, artist, album, genre, duration, and more. Encoding details for the video, audio, and subtitle tracks are shown separately.
 
-Every push to `main` or `master` runs `.github/workflows/release.yml`. The workflow can also be started by hand.
+## Recording
 
-The build runs once on `windows-latest`. After that, two releases are published in parallel, with the same `v<version>` tag, the same name, and the same description from `body.txt`:
+While something is playing you can record what you hear and see into a new video file, and choose where to save it. The recording bar shows that recording is on and how long it has been running.
 
-- [hartkkuh/video](https://github.com/hartkkuh/video) — the source repository. This upload uses the workflow token, which has `contents: write`.
-- [hartkkuh/FMP-Media-Player](https://github.com/hartkkuh/FMP-Media-Player) — the public release repository. This upload uses the `RELEASE_TOKEN` secret stored on the source repository. That token needs Contents read and write on `FMP-Media-Player`.
+When playback is paused, the time shown on the recording bar stops too. Moving to another file ends the recording.
 
-The installed app checks for updates against the latest release of `hartkkuh/FMP-Media-Player`. The download URL in `update.json` is synced to that repository before every build (`scripts/sync-update-json.mjs`).
+## Settings and memory
 
-Each release includes the installer `FMP Video Player-Setup-<version>.exe`, the `blockmap` file, and `latest.yml`.
+You can choose Hebrew or English, a dark or light look, and where the control bar sits.
+
+The next time you open the player it also remembers the volume, speed, repeat mode, shuffle, effects, recent files, and playlists.
+
+## Updates
+
+On the About page you can check whether a newer version exists and install it. Each time the player opens, it also quietly checks whether a newer version is out.
+
+When a newer version is found, a bar appears at the top of the window, and you can install from it or dismiss it.
